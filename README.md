@@ -42,6 +42,10 @@ $ npm run start:dev
 
 # production mode
 $ npm run start:prod
+
+#check connection prisma
+$ npx prisma generate
+$ npm run check
 ```
 
 ## Run tests

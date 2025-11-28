@@ -10,6 +10,8 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -32,9 +34,20 @@ export class PostController {
   }
 
   @Get()
-  async findAll(@Query() query: QueryPostDto) {
-    try{
-      return new ResponseData(await this.postService.findAll(query), HttpStatus.OK, HttpMessage.SUCCESS);
+  async findAll(@Query() query: QueryPostDto, @Req() req: Request) {
+    try {
+      // Lấy token từ request header (từ API Gateway forward xuống)
+      const authHeader = req.headers['authorization'] as string;
+      const token = authHeader?.startsWith('Bearer ')
+        ? authHeader.substring(7)
+        : authHeader;
+
+      const posts = await this.postService.findAll(query, token);
+      return new ResponseData(
+        posts,
+        HttpStatus.OK,
+        HttpMessage.SUCCESS,
+      );
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }

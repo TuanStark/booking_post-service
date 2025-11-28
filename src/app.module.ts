@@ -4,9 +4,13 @@ import { AppService } from './app.service';
 import { PostCategoriesModule } from './modules/post-categories/post-categories.module';
 import { PostModule } from './modules/post/post.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ExternalModule } from './common/external/external.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [PostCategoriesModule, PostModule, PrismaModule],
+  imports: [PostCategoriesModule, PostModule, PrismaModule, ExternalModule, ConfigModule.forRoot({
+    isGlobal: true,
+  })],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -9,10 +9,13 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { QueryPostDto } from './dto/query-post.dto';
 import { Post, PostStatus } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
+import { ExternalService } from 'src/common/external/external.service';
 
 @Injectable()
 export class PostService {
-  constructor(private prisma: PrismaClient) { }
+  constructor(private prisma: PrismaClient,
+    private readonly externalService: ExternalService,
+  ) { }
 
   async create(dto: CreatePostDto) {
     const exists = await this.prisma.post.findUnique({
@@ -30,7 +33,7 @@ export class PostService {
     });
   }
 
-  async findAll(query: QueryPostDto) {
+  async findAll(query: QueryPostDto, token?: string) {
     const { page, limit, status, categorySlug, search } = query;
     const skip = ((page || 1) - 1) * (limit || 10);
 
@@ -44,6 +47,8 @@ export class PostService {
     }
     if (categorySlug) where.category = { slug: categorySlug };
 
+    
+
     const [data, total] = await Promise.all([
       this.prisma.post.findMany({
         where,
@@ -55,8 +60,10 @@ export class PostService {
       this.prisma.post.count({ where }),
     ]);
 
+    const datawithUser = await this.enrichPostsWithUserData(data, token);
+
     return {
-      data,
+      data : datawithUser,
       meta: {
         page,
         limit,
@@ -117,5 +124,31 @@ export class PostService {
       where: { id },
       data: { status: PostStatus.DRAFT, publishedAt: null },
     });
+  }
+
+  private async enrichPostsWithUserData(
+    payments: any[],
+    token?: string,
+  ): Promise<any[]> {
+    if (payments.length === 0) {
+      return payments;
+    }
+
+    // Collect tất cả userId
+    const userIds: string[] = [];
+    payments.forEach((payment) => {
+      if (payment.userId && !userIds.includes(payment.userId)) {
+        userIds.push(payment.userId);
+      }
+    });
+
+    // Fetch users parallel (tối ưu performance)
+    const usersMap = await this.externalService.getUsersByIds(userIds, token);
+
+    // Map user data vào payments
+    return payments.map((payment) => ({
+      ...payment,
+      user: usersMap.get(payment.userId) || null,
+    }));
   }
 }

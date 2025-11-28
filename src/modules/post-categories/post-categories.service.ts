@@ -7,19 +7,29 @@ import { CreatePostCategoryDto } from './dto/create-post-category.dto';
 export class PostCategoryService {
   constructor(private prisma: PrismaClient) { }
 
-  create(dto: CreatePostCategoryDto) {
-    return this.prisma.category.create({ data: dto });
+  async create(dto: CreatePostCategoryDto) {
+    try{
+      return await this.prisma.category.create({ data: dto });
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
-  findAll() {
-    return this.prisma.category.findMany({
-      orderBy: { name: 'asc' },
-      include: { _count: { select: { posts: true } } },
-    });
+  async findAll() {
+    try{
+      const data = await this.prisma.category.findMany({
+        orderBy: { name: 'asc' },
+        include: { _count: { select: { posts: true } } },
+      });
+      return data;
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
-  findOne(idOrSlug: string) {
-    return this.prisma.category.findFirst({
+  async findOne(idOrSlug: string) {
+    try{
+      return await this.prisma.category.findFirst({
       where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
       include: {
         posts: {
@@ -28,13 +38,24 @@ export class PostCategoryService {
         },
       },
     });
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
-  update(id: string, dto: any) {
-    return this.prisma.category.update({ where: { id }, data: dto });
+  async update(id: string, dto: any) {
+    try{
+      return await this.prisma.category.update({ where: { id }, data: dto });
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
-  remove(id: string) {
-    return this.prisma.category.delete({ where: { id } });
+  async remove(id: string) {
+    try{
+      return await this.prisma.category.delete({ where: { id } });
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 }

@@ -10,27 +10,27 @@ export class PostCategoryController {
   constructor(private readonly service: PostCategoryService) { }
 
   @Post()
-  create(@Body() dto: CreatePostCategoryDto) {
+  async create(@Body() dto: CreatePostCategoryDto) {
     try{
-      return new ResponseData(this.service.create(dto), HttpStatus.CREATED, HttpMessage.SUCCESS);
+      return new ResponseData(await this.service.create(dto), HttpStatus.CREATED, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
   }
 
   @Get()
-  findAll() {
+  async findAll() {
     try{
-      return new ResponseData(this.service.findAll(), HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(await this.service.findAll(), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
   }
 
   @Get(':idOrSlug')
-  findOne(@Param('idOrSlug') idOrSlug: string) {
+  async findOne(@Param('idOrSlug') idOrSlug: string) {
     try{
-      return new ResponseData(this.service.findOne(idOrSlug), HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(await this.service.findOne(idOrSlug), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }

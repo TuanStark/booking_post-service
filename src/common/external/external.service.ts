@@ -87,7 +87,6 @@ export class ExternalService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      // Build headers với token nếu có
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };

@@ -23,36 +23,36 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post()
-  create(@Body() dto: CreatePostDto) {
+  async create(@Body() dto: CreatePostDto) {
     try{
-      return new ResponseData(this.postService.create(dto), HttpStatus.CREATED, HttpMessage.SUCCESS);
+      return new ResponseData(await this.postService.create(dto), HttpStatus.CREATED, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
   }
 
   @Get()
-  findAll(@Query() query: QueryPostDto) {
+  async findAll(@Query() query: QueryPostDto) {
     try{
-      return new ResponseData(this.postService.findAll(query), HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(await this.postService.findAll(query), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
   }
 
   @Get(':idOrSlug')
-  findOne(@Param('idOrSlug') idOrSlug: string) {
+  async findOne(@Param('idOrSlug') idOrSlug: string) {
     try{
-      return new ResponseData(this.postService.findOne(idOrSlug), HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(await this.postService.findOne(idOrSlug), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdatePostDto) {
+  async update(@Param('id') id: string, @Body() dto: UpdatePostDto) {
     try{
-      return new ResponseData(this.postService.update(id, dto), HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(await this.postService.update(id, dto), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
@@ -60,27 +60,27 @@ export class PostController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     try{
-      return new ResponseData(this.postService.remove(id), HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(await this.postService.remove(id), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
   }
 
   @Post(':id/publish')
-  publish(@Param('id') id: string) {
+  async publish(@Param('id') id: string) {
     try{
-      return new ResponseData(this.postService.publish(id), HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(await this.postService.publish(id), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
   }
 
   @Post(':id/draft')
-  draft(@Param('id') id: string) {
+  async draft(@Param('id') id: string) {
     try{
-      return new ResponseData(this.postService.draft(id), HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(await this.postService.draft(id), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }

@@ -10,24 +10,41 @@ import { QueryPostDto } from './dto/query-post.dto';
 import { Post, PostStatus } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { ExternalService } from 'src/common/external/external.service';
+import { UploadService } from 'src/utils/uploads.service';
+import { generateUniqueSlug } from 'src/utils/generate-slug';
 
 @Injectable()
 export class PostService {
   constructor(private prisma: PrismaClient,
     private readonly externalService: ExternalService,
+    private readonly uploadService: UploadService,
   ) { }
 
-  async create(dto: CreatePostDto) {
-    const exists = await this.prisma.post.findUnique({
-      where: { slug: dto.slug },
-    });
-    if (exists) throw new ConflictException('Slug đã tồn tại');
+  async create(dto: CreatePostDto, file?: Express.Multer.File, userId?: string) {
+    // const exists = await this.prisma.post.findUnique({
+    //   where: { id: dto.id },
+    // });
+    // if (exists) throw new ConflictException('ID đã tồn tại');
+
+    const slug = await generateUniqueSlug(dto.title, this.prisma);
+
+    let thumbnailUrl = '';
+    let thumbnailPublicId = '';
+    if (file) {
+      const { imageUrl, imagePublicId } = await this.uploadService.uploadImage(file);
+      thumbnailUrl = imageUrl;
+      thumbnailPublicId = imagePublicId;
+    }
 
     return this.prisma.post.create({
       data: {
         ...dto,
         status: dto.status || PostStatus.DRAFT,
         publishedAt: dto.status === PostStatus.PUBLISHED ? new Date() : null,
+        authorId: userId || '1',
+        thumbnailUrl,
+        thumbnailPublicId,
+        slug,
       },
       include: { category: { select: { id: true, name: true, slug: true } } },
     });

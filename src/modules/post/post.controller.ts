@@ -12,6 +12,8 @@ import {
   HttpStatus,
   BadRequestException,
   Req,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -19,17 +21,45 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { QueryPostDto } from './dto/query-post.dto';
 import { ResponseData } from '../../common/global/globalClass';
 import { HttpMessage } from '../../common/global/globalEnum';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) { }
 
   @Post()
-  async create(@Body() dto: CreatePostDto) {
+  @UseInterceptors(FileInterceptor('file'))
+  async create(
+    @Body() createPostDto: CreatePostDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+  ) {
     try {
-      return new ResponseData(await this.postService.create(dto), HttpStatus.CREATED, HttpMessage.SUCCESS);
+      // Extract userId from x-user-id header sent by API Gateway
+      const userId = req.headers['x-user-id'] as string;
+
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+      if (!file) {
+        throw new BadRequestException('file is required');
+      }
+      const post = await this.postService.create(
+        createPostDto,
+        file,
+        userId,
+      );
+      return new ResponseData(
+        post,
+        HttpStatus.ACCEPTED,
+        HttpMessage.SUCCESS,
+      );
     } catch (error) {
-      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+      return new ResponseData(
+        null,
+        HttpStatus.NOT_FOUND,
+        HttpMessage.NOT_FOUND,
+      );
     }
   }
 

@@ -24,12 +24,13 @@ model Category {
 
 // Post (News)
 model Post {
-  id           String  @id @default(uuid())
-  title        String
-  slug         String  @unique
-  summary      String?
-  content      String
-  thumbnailUrl String?
+  id                String  @id @default(uuid())
+  title             String
+  slug              String  @unique
+  summary           String?
+  content           String
+  thumbnailUrl      String?
+  thumbnailPublicId String?
 
   status      PostStatus @default(DRAFT)
   publishedAt DateTime?

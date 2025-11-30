@@ -32,6 +32,9 @@ export class CreatePostDto {
   // @IsUUID()
   categoryId: string;
 
-  @IsString()
+  // @IsString()
   authorId: string;
+
+  @IsString()
+  thumbnailPublicId?: string;
 }

@@ -21,11 +21,6 @@ export class PostService {
   ) { }
 
   async create(dto: CreatePostDto, file?: Express.Multer.File, userId?: string) {
-    // const exists = await this.prisma.post.findUnique({
-    //   where: { id: dto.id },
-    // });
-    // if (exists) throw new ConflictException('ID đã tồn tại');
-
     const slug = await generateUniqueSlug(dto.title, this.prisma);
 
     let thumbnailUrl = '';
@@ -100,13 +95,19 @@ export class PostService {
     return post;
   }
 
-  async update(id: string, dto: UpdatePostDto) {
+  async update(id: string, dto: UpdatePostDto, file?: Express.Multer.File, userId?: string) {
     // Validate slug có bị trùng hay không
     if (dto.slug) {
       const exists = await this.prisma.post.findFirst({
         where: { slug: dto.slug, NOT: { id } },
       });
       if (exists) throw new ConflictException('Slug đã được sử dụng');
+    }
+
+    if (file) {
+      const { imageUrl, imagePublicId } = await this.uploadService.uploadImage(file);
+      dto.thumbnailUrl = imageUrl;
+      dto.thumbnailPublicId = imagePublicId;
     }
 
     // Tách categoryId ra khỏi dto
@@ -116,6 +117,7 @@ export class PostService {
       where: { id },
       data: {
         ...rest,
+        authorId: userId,
 
         publishedAt:
           dto.status === PostStatus.PUBLISHED
@@ -139,7 +141,8 @@ export class PostService {
 
   async remove(id: string) {
     await this.findOne(id); // check tồn tại
-    return this.prisma.post.delete({ where: { id } });
+    await this.prisma.post.delete({ where: { id } });
+    return { message: 'Deleted successfully' };
   }
 
   // Bonus: publish / draft nhanh

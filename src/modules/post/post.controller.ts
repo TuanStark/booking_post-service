@@ -14,6 +14,7 @@ import {
   Req,
   UseInterceptors,
   UploadedFile,
+  HttpException,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -93,25 +94,41 @@ export class PostController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdatePostDto) {
+  @UseInterceptors(FileInterceptor('file'))
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdatePostDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+  ) {
     console.log(id);
     console.log(dto);
+    // Extract userId from x-user-id header sent by API Gateway
+    const userId = req.headers['x-user-id'] as string;
+
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!file) {
+      throw new BadRequestException('file is required');
+    }
     try {
-      return new ResponseData(await this.postService.update(id, dto), HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(await this.postService.update(id, dto, file, userId), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string) {
+  @HttpCode(HttpStatus.NO_CONTENT) // 204
+  async remove(@Param('id') id: string): Promise<void> {
     try {
-      return new ResponseData(await this.postService.remove(id), HttpStatus.OK, HttpMessage.SUCCESS);
+      await this.postService.remove(id);
     } catch (error) {
-      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+      throw new HttpException(HttpMessage.SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
 
   @Post(':id/publish')
   async publish(@Param('id') id: string) {

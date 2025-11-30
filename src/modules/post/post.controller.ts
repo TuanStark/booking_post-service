@@ -22,11 +22,11 @@ import { HttpMessage } from '../../common/global/globalEnum';
 
 @Controller('posts')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(private readonly postService: PostService) { }
 
   @Post()
   async create(@Body() dto: CreatePostDto) {
-    try{
+    try {
       return new ResponseData(await this.postService.create(dto), HttpStatus.CREATED, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
@@ -55,7 +55,7 @@ export class PostController {
 
   @Get(':idOrSlug')
   async findOne(@Param('idOrSlug') idOrSlug: string) {
-    try{
+    try {
       return new ResponseData(await this.postService.findOne(idOrSlug), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
@@ -64,7 +64,9 @@ export class PostController {
 
   @Patch(':id')
   async update(@Param('id') id: string, @Body() dto: UpdatePostDto) {
-    try{
+    console.log(id);
+    console.log(dto);
+    try {
       return new ResponseData(await this.postService.update(id, dto), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
@@ -74,7 +76,7 @@ export class PostController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
-    try{
+    try {
       return new ResponseData(await this.postService.remove(id), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
@@ -83,7 +85,7 @@ export class PostController {
 
   @Post(':id/publish')
   async publish(@Param('id') id: string) {
-    try{
+    try {
       return new ResponseData(await this.postService.publish(id), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
@@ -92,7 +94,7 @@ export class PostController {
 
   @Post(':id/draft')
   async draft(@Param('id') id: string) {
-    try{
+    try {
       return new ResponseData(await this.postService.draft(id), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {
       return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);

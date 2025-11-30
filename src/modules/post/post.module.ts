@@ -4,10 +4,9 @@ import { PostController } from './post.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { ExternalModule } from 'src/common/external/external.module';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [ ExternalModule, HttpModule, PrismaModule],
+  imports: [ExternalModule, HttpModule, PrismaModule],
   controllers: [PostController],
   providers: [PostService],
   exports: [PostService],

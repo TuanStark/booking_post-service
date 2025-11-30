@@ -47,7 +47,7 @@ export class PostService {
     }
     if (categorySlug) where.category = { slug: categorySlug };
 
-    
+
 
     const [data, total] = await Promise.all([
       this.prisma.post.findMany({
@@ -63,7 +63,7 @@ export class PostService {
     const datawithUser = await this.enrichPostsWithUserData(data, token);
 
     return {
-      data : datawithUser,
+      data: datawithUser,
       meta: {
         page,
         limit,
@@ -84,6 +84,7 @@ export class PostService {
   }
 
   async update(id: string, dto: UpdatePostDto) {
+    // Validate slug có bị trùng hay không
     if (dto.slug) {
       const exists = await this.prisma.post.findFirst({
         where: { slug: dto.slug, NOT: { id } },
@@ -91,18 +92,31 @@ export class PostService {
       if (exists) throw new ConflictException('Slug đã được sử dụng');
     }
 
+    // Tách categoryId ra khỏi dto
+    const { categoryId, ...rest } = dto;
+
     return this.prisma.post.update({
       where: { id },
       data: {
-        ...dto,
+        ...rest,
+
         publishedAt:
           dto.status === PostStatus.PUBLISHED
             ? new Date()
             : dto.status === PostStatus.DRAFT
               ? null
               : undefined,
+
+        // connect category theo categoryId
+        ...(categoryId && {
+          category: {
+            connect: { id: categoryId },
+          },
+        }),
       },
-      include: { category: { select: { name: true, slug: true } } },
+      include: {
+        category: { select: { name: true, slug: true } },
+      },
     });
   }
 

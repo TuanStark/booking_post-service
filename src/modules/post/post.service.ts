@@ -44,43 +44,61 @@ export class PostService {
       include: { category: { select: { id: true, name: true, slug: true } } },
     });
   }
+  //
 
   async findAll(query: QueryPostDto, token?: string) {
-    const { page, limit, status, categorySlug, search } = query;
-    const skip = ((page || 1) - 1) * (limit || 10);
+    const { sortBy = 'createdAt', sortOrder = 'desc' } = query;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+
+    if (page < 1 || limit < 1) {
+      throw new Error('Page and limit must be greater than 0');
+    }
+
+    const skip = (page - 1) * limit;
+    const take = limit;
 
     const where: any = {};
-    if (status) where.status = status;
-    if (search) {
+
+    if (query.search) {
+      const searchCap =
+        query.search.charAt(0).toUpperCase() + query.search.slice(1);
+
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { content: { contains: search, mode: 'insensitive' } },
+        { title: { contains: searchCap } },
+        { content: { contains: searchCap } },
       ];
     }
-    if (categorySlug) where.category = { slug: categorySlug };
 
+    if (query.categoryId) {
+      where.categoryId = query.categoryId;
+    }
 
+    if (query.status) {
+      where.status = query.status;
+    }
 
-    const [data, total] = await Promise.all([
+    const orderBy = { [sortBy]: sortOrder };
+
+    const [posts, total] = await Promise.all([
       this.prisma.post.findMany({
         where,
+        orderBy,
         skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: { category: { select: { id: true, name: true, slug: true } } },
+        take,
       }),
       this.prisma.post.count({ where }),
     ]);
 
-    const datawithUser = await this.enrichPostsWithUserData(data, token);
+    const postsWithUser = await this.enrichPostsWithUserData(posts, token);
 
     return {
-      data: datawithUser,
+      data: postsWithUser,
       meta: {
+        total,
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / (limit || 10)),
+        totalPages: Math.ceil(total / limit),
       },
     };
   }

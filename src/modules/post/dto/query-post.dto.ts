@@ -1,28 +1,17 @@
 // src/post/dto/query-post.dto.ts
-import { IsOptional, IsEnum, IsString, IsInt, Min } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsOptional, IsEnum, IsString } from 'class-validator';
 import { PostStatus } from '../enum/enum';
+import { FindAllDto } from 'src/common/global/find-all.dto';
+import { PartialType } from '@nestjs/mapped-types';
 
-export class QueryPostDto {
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value))
-  @IsInt()
-  @Min(1)
-  page: number = 1;
-
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value))
-  @IsInt()
-  @Min(1)
-  limit: number = 10;
-
+export class QueryPostDto extends PartialType(FindAllDto) {
   @IsOptional()
   @IsEnum(PostStatus)
   status?: PostStatus;
 
   @IsOptional()
   @IsString()
-  categorySlug?: string;
+  categoryId?: string;
 
   @IsOptional()
   @IsString()

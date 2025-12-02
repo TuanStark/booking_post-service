@@ -44,7 +44,6 @@ export class PostService {
       include: { category: { select: { id: true, name: true, slug: true } } },
     });
   }
-  //
 
   async findAll(query: QueryPostDto, token?: string) {
     const { sortBy = 'createdAt', sortOrder = 'desc' } = query;
@@ -70,8 +69,11 @@ export class PostService {
       ];
     }
 
-    if (query.categoryId) {
-      where.categoryId = query.categoryId;
+    // Category filter — FIXED HERE
+    if (query.categorySlug) {
+      where.category = {
+        slug: query.categorySlug,
+      };
     }
 
     if (query.status) {
@@ -86,7 +88,17 @@ export class PostService {
         orderBy,
         skip,
         take,
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
       }),
+
       this.prisma.post.count({ where }),
     ]);
 

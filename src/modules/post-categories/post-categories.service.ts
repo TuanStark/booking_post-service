@@ -22,7 +22,7 @@ export class PostCategoryService {
   async findAll(query: FindAllDto) {
     const {
       page = 1,
-      limit = 3,
+      limit = 4,
       sortBy = 'createdAt',
       sortOrder = 'desc',
     } = query;

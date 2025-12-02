@@ -11,7 +11,7 @@ export class QueryPostDto extends PartialType(FindAllDto) {
 
   @IsOptional()
   @IsString()
-  categoryId?: string;
+  categorySlug?: string;
 
   @IsOptional()
   @IsString()

@@ -84,6 +84,26 @@ export class PostController {
     }
   }
 
+  @Get('related')
+  async getRelatedPosts(
+    @Query('categorySlug') categorySlug: string,
+    @Query('excludeId') excludeId: string,
+    @Query('limit') limit: string
+  ) {
+    try {
+      const posts = await this.postService.findRelated({
+        categorySlug,
+        excludeId,
+        limit: Number(limit) || 6,
+      });
+
+      return new ResponseData(posts, HttpStatus.OK, HttpMessage.SUCCESS);
+
+    } catch (error) {
+      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+    }
+  }
+
   @Get(':idOrSlug')
   async findOne(@Param('idOrSlug') idOrSlug: string) {
     try {

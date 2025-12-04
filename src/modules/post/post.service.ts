@@ -122,8 +122,40 @@ export class PostService {
     });
 
     if (!post) throw new NotFoundException('Bài viết không tồn tại');
-    return post;
+
+    return {
+      data: post,
+    };
   }
+
+  async findRelated(params: {
+    categorySlug?: string;
+    excludeId?: string;
+    limit: number;
+  }): Promise<{ data: Post[] }> {
+
+    const { categorySlug, excludeId, limit } = params;
+
+    const posts = await this.prisma.post.findMany({
+      where: {
+        category: {
+          slug: categorySlug,
+        },
+        id: {
+          not: excludeId,
+        },
+      },
+      take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return {
+      data: posts,
+    };
+  }
+
 
   async update(id: string, dto: UpdatePostDto, file?: Express.Multer.File, userId?: string) {
     // Validate slug có bị trùng hay không

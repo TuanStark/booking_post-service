@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+  post-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: post-service
+    ports:
+      - "3010:3010"
+    env_file:
+    - .env
+    volumes:
+      - /app/node_modules
+    user: node
+    command: ["node", "dist/main"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      my_custom_network:
+        ipv4_address: ${APP_IP}
+
+networks:
+  my_custom_network:
+    external: true

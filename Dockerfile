@@ -1,71 +1,48 @@
-# =============================
-# 1. BUILDER – Compile TypeScript → JS
-# =============================
-FROM node:20-alpine AS builder
+# Stage 1: Builder
+FROM node:22-alpine AS builder
 WORKDIR /app
-
-# Copy package files first → Tối ưu cache
 COPY package*.json ./
 COPY prisma ./prisma/
-
-# Cài TẤT CẢ dependencies (dev + prod) để build
-RUN npm ci --legacy-peer-deps
-
-# Copy toàn bộ source code
+COPY prisma.config.ts ./prisma.config.ts
+RUN npm ci
 COPY . .
 
-# Generate Prisma Client + Build NestJS
-RUN npx prisma generate && \
-    npm run build
+RUN DATABASE_URL="postgresql://post_user:12345@10.0.0.23:5441/post_db?schema=public" npx prisma generate
+RUN npm run build
 
-# =============================
-# 2. PRUNER – Loại bỏ devDependencies
-# =============================
-FROM node:20-alpine AS pruner
+RUN npx tsc prisma.config.ts --module commonjs --target ES2020 --esModuleInterop --skipLibCheck --outDir . || true
+
+# Stage 2: Prune production dependencies
+FROM node:22-alpine AS pruner
 WORKDIR /app
-
-# Copy cần thiết từ builder
 COPY package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist         ./dist
-COPY --from=builder /app/prisma       ./prisma
+COPY prisma ./prisma/
+COPY prisma.config.ts ./prisma.config.ts
+RUN npm ci
 
-# Cài CHỈ production dependencies
-RUN npm ci --only=production --legacy-peer-deps && \
-    npm cache clean --force && \
-    rm -rf /app/node_modules/.prisma
+RUN npm prune --production && \
+    npm install --save-prod ts-node typescript || true
 
-# Tái tạo Prisma Client trong môi trường sạch (binary nhỏ hơn)
-RUN npx prisma generate
+RUN DATABASE_URL="postgresql://post_user:12345@10.0.0.23:5441/post_db?schema=public" npx prisma generate
 
-# =============================
-# 3. FINAL IMAGE – Runtime only
-# =============================
-FROM node:20-alpine AS production
+# Stage 3: Production
+FROM node:22-alpine AS production
 WORKDIR /app
 
-# Tạo user non-root (bảo mật)
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001
 
-# Copy file cần thiết + gán quyền
-COPY --from=pruner --chown=nestjs:nodejs /app/package*.json ./
-COPY --from=pruner --chown=nestjs:nodejs /app/dist          ./dist
-COPY --from=pruner --chown=nestjs:nodejs /app/prisma        ./prisma
-COPY --from=pruner --chown=nestjs:nodejs /app/node_modules  ./node_modules
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
 
-# Chuyển sang user non-root
+
+COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
+COPY --from=builder --chown=nestjs:nodejs /app/scripts ./scripts
+COPY --from=pruner --chown=nestjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nestjs:nodejs /app/prisma/schema.prisma ./prisma/schema.prisma
+COPY --from=builder --chown=nestjs:nodejs /app/prisma/migrations ./prisma/migrations
+COPY --from=pruner --chown=nestjs:nodejs /app/prisma.config.ts ./prisma.config.ts
+
 USER nestjs
+EXPOSE 3010
 
-# Environment
-ENV NODE_ENV=production \
-    PORT=3001
-
-EXPOSE 3001
-
-# Healthcheck (tùy chọn – yêu cầu có endpoint /health)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
-  CMD wget -qO- http://localhost:${PORT}/health || exit 1
-
-# Khởi động ứng dụng
-CMD ["node", "dist/main"]
+CMD ["npm", "run", "start:migrate:prod"]

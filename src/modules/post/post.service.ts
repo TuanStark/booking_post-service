@@ -7,11 +7,12 @@ import {
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { QueryPostDto } from './dto/query-post.dto';
-import { Post, PostStatus } from '@prisma/client';
-import { PrismaClient } from '@prisma/client';
+import { PostStatus } from './enum/enum';
 import { ExternalService } from 'src/common/external/external.service';
 import { UploadService } from 'src/utils/uploads.service';
 import { generateUniqueSlug } from 'src/utils/generate-slug';
+import { PrismaClient } from '@prisma/client';
+import { Post } from 'src/utils/type';
 
 @Injectable()
 export class PostService {
@@ -152,7 +153,7 @@ export class PostService {
     });
 
     return {
-      data: posts,
+      data: posts as Post[],
     };
   }
 

@@ -129,9 +129,7 @@ export class PostController {
     if (!userId) {
       throw new Error('User ID is required');
     }
-    if (!file) {
-      throw new BadRequestException('file is required');
-    }
+
     try {
       return new ResponseData(await this.postService.update(id, dto, file, userId), HttpStatus.OK, HttpMessage.SUCCESS);
     } catch (error) {

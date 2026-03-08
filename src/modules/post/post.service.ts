@@ -124,16 +124,14 @@ export class PostService {
 
     if (!post) throw new NotFoundException('Bài viết không tồn tại');
 
-    return {
-      data: post,
-    };
+    return post;
   }
 
   async findRelated(params: {
     categorySlug?: string;
     excludeId?: string;
     limit: number;
-  }): Promise<{ data: Post[] }> {
+  }) {
 
     const { categorySlug, excludeId, limit } = params;
 
@@ -152,9 +150,7 @@ export class PostService {
       },
     });
 
-    return {
-      data: posts as Post[],
-    };
+    return posts as Post[];
   }
 
 

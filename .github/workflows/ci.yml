@@ -30,6 +30,9 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Generate Prisma client
+        env:
+          # Dùng DATABASE_URL giả chỉ để Prisma generate client, không connect DB
+          DATABASE_URL: postgresql://user:password@localhost:5432/dummydb
         run: npx prisma generate
 
       - name: Run ESLint
@@ -58,6 +61,9 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Generate Prisma client
+        env:
+          # Dùng DATABASE_URL giả chỉ để Prisma generate client, không connect DB
+          DATABASE_URL: postgresql://user:password@localhost:5432/dummydb
         run: npx prisma generate
 
       - name: Build application

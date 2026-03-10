@@ -12,7 +12,6 @@ import { ExternalService } from 'src/common/external/external.service';
 import { UploadService } from 'src/utils/uploads.service';
 import { generateUniqueSlug } from 'src/utils/generate-slug';
 import { PrismaClient, Prisma } from '@prisma/client';
-import { Post } from 'src/utils/type';
 
 @Injectable()
 export class PostService {
@@ -155,7 +154,7 @@ export class PostService {
       },
     });
 
-    return posts as Post[];
+    return posts;
   }
 
   async update(
@@ -230,11 +229,9 @@ export class PostService {
   }
 
   private async enrichPostsWithUserData(
-    payments: Array<Post & { userId?: string }>,
+    payments: any[],
     token?: string,
-  ): Promise<
-    Array<Post & { userId?: string; user: Record<string, unknown> | null }>
-  > {
+  ): Promise<any[]> {
     if (payments.length === 0) {
       return payments;
     }
@@ -253,8 +250,7 @@ export class PostService {
     // Map user data vào payments
     return payments.map((payment) => ({
       ...payment,
-      user:
-        (usersMap.get(payment.userId ?? '') as Record<string, unknown>) ?? null,
+      user: usersMap.get(payment.userId ?? '') ?? null,
     }));
   }
 }

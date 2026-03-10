@@ -72,14 +72,20 @@ async function checkPrisma() {
     console.log('Dọn dẹp dữ liệu test: OK');
     console.log('\nPrisma 7 + Adapter HOẠT ĐỘNG HOÀN HẢO 100%');
     console.log('Rust-free mode: Nhanh hơn, không cần binary engine');
-  } catch (error: any) {
-    console.error('\nLỗi rồi:', error.message);
-    if (error.code === 'P1001')
-      console.error('Kiểm tra DATABASE_URL trong .env');
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('\nLỗi rồi:', error.message);
+      const code = (error as { code?: string }).code;
+      if (code === 'P1001') {
+        console.error('Kiểm tra DATABASE_URL trong .env');
+      }
+    } else {
+      console.error('\nLỗi rồi:', String(error));
+    }
   } finally {
     await prisma.$disconnect();
     console.log('\nĐã đóng kết nối. Bye!');
   }
 }
 
-checkPrisma();
+void checkPrisma();

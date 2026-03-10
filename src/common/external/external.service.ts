@@ -54,8 +54,10 @@ export class ExternalService {
     // Fetch từ service (parallel requests)
     try {
       const fetchPromises = idsToFetch.map((id) =>
-        this.fetchUserById(id, token).catch((error) => {
-          this.logger.warn(`Failed to fetch user ${id}: ${error.message}`);
+        this.fetchUserById(id, token).catch((error: unknown) => {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          this.logger.warn(`Failed to fetch user ${id}: ${message}`);
           return null;
         }),
       );
@@ -72,8 +74,10 @@ export class ExternalService {
           }
         }),
       );
-    } catch (error) {
-      this.logger.error(`Error fetching users: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Error fetching users: ${message}`, stack);
     }
 
     return result;
@@ -112,19 +116,24 @@ export class ExternalService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: unknown = await response.json();
 
       // ResponseData wrapper: { data, status, message }
-      if (data && data.data) {
-        return data.data;
+      if (
+        data &&
+        typeof data === 'object' &&
+        'data' in data &&
+        (data as { data: unknown }).data !== undefined
+      ) {
+        return (data as { data: unknown }).data;
       }
       return data;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'AbortError') {
         this.logger.error(`Request timeout for user ${userId}`);
         throw new Error(`Request timeout for user ${userId}`);
       }
-      if (error.message?.includes('404')) {
+      if (error instanceof Error && error.message.includes('404')) {
         this.logger.warn(`User not found: ${userId}`);
         return null;
       }

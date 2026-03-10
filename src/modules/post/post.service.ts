@@ -11,25 +11,31 @@ import { PostStatus } from './enum/enum';
 import { ExternalService } from 'src/common/external/external.service';
 import { UploadService } from 'src/utils/uploads.service';
 import { generateUniqueSlug } from 'src/utils/generate-slug';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { Post } from 'src/utils/type';
 
 @Injectable()
 export class PostService {
-  constructor(private prisma: PrismaClient,
+  constructor(
+    private prisma: PrismaClient,
     private readonly externalService: ExternalService,
     private readonly uploadService: UploadService,
-  ) { }
+  ) {}
 
-  async create(dto: CreatePostDto, file?: Express.Multer.File, userId?: string) {
+  async create(
+    dto: CreatePostDto,
+    file?: Express.Multer.File,
+    userId?: string,
+  ) {
     const slug = await generateUniqueSlug(dto.title, this.prisma);
 
     let thumbnailUrl = '';
     let thumbnailPublicId = '';
     if (file) {
-      const { imageUrl, imagePublicId } = await this.uploadService.uploadImage(file);
-      thumbnailUrl = imageUrl;
-      thumbnailPublicId = imagePublicId;
+      const { imageUrl, imagePublicId } =
+        await this.uploadService.uploadImage(file);
+      thumbnailUrl = imageUrl ?? '';
+      thumbnailPublicId = imagePublicId ?? '';
     }
 
     return this.prisma.post.create({
@@ -58,7 +64,7 @@ export class PostService {
     const skip = (page - 1) * limit;
     const take = limit;
 
-    const where: any = {};
+    const where: Prisma.PostWhereInput = {};
 
     if (query.search) {
       const searchCap =
@@ -132,7 +138,6 @@ export class PostService {
     excludeId?: string;
     limit: number;
   }) {
-
     const { categorySlug, excludeId, limit } = params;
 
     const posts = await this.prisma.post.findMany({
@@ -153,8 +158,12 @@ export class PostService {
     return posts as Post[];
   }
 
-
-  async update(id: string, dto: UpdatePostDto, file?: Express.Multer.File, userId?: string) {
+  async update(
+    id: string,
+    dto: UpdatePostDto,
+    file?: Express.Multer.File,
+    userId?: string,
+  ) {
     // Validate slug có bị trùng hay không
     if (dto.slug) {
       const exists = await this.prisma.post.findFirst({
@@ -164,9 +173,10 @@ export class PostService {
     }
 
     if (file) {
-      const { imageUrl, imagePublicId } = await this.uploadService.uploadImage(file);
-      dto.thumbnailUrl = imageUrl;
-      dto.thumbnailPublicId = imagePublicId;
+      const { imageUrl, imagePublicId } =
+        await this.uploadService.uploadImage(file);
+      dto.thumbnailUrl = imageUrl ?? dto.thumbnailUrl;
+      dto.thumbnailPublicId = imagePublicId ?? dto.thumbnailPublicId;
     }
 
     // Tách categoryId ra khỏi dto
@@ -220,9 +230,11 @@ export class PostService {
   }
 
   private async enrichPostsWithUserData(
-    payments: any[],
+    payments: Array<Post & { userId?: string }>,
     token?: string,
-  ): Promise<any[]> {
+  ): Promise<
+    Array<Post & { userId?: string; user: Record<string, unknown> | null }>
+  > {
     if (payments.length === 0) {
       return payments;
     }
@@ -241,7 +253,8 @@ export class PostService {
     // Map user data vào payments
     return payments.map((payment) => ({
       ...payment,
-      user: usersMap.get(payment.userId) || null,
+      user:
+        (usersMap.get(payment.userId ?? '') as Record<string, unknown>) ?? null,
     }));
   }
 }

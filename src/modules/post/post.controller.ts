@@ -26,7 +26,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('posts')
 export class PostController {
-  constructor(private readonly postService: PostService) { }
+  constructor(private readonly postService: PostService) {}
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
@@ -45,17 +45,9 @@ export class PostController {
       if (!file) {
         throw new BadRequestException('file is required');
       }
-      const post = await this.postService.create(
-        createPostDto,
-        file,
-        userId,
-      );
-      return new ResponseData(
-        post,
-        HttpStatus.ACCEPTED,
-        HttpMessage.SUCCESS,
-      );
-    } catch (error) {
+      const post = await this.postService.create(createPostDto, file, userId);
+      return new ResponseData(post, HttpStatus.ACCEPTED, HttpMessage.SUCCESS);
+    } catch {
       return new ResponseData(
         null,
         HttpStatus.NOT_FOUND,
@@ -74,13 +66,13 @@ export class PostController {
         : authHeader;
 
       const posts = await this.postService.findAll(query, token);
+      return new ResponseData(posts, HttpStatus.OK, HttpMessage.SUCCESS);
+    } catch {
       return new ResponseData(
-        posts,
-        HttpStatus.OK,
-        HttpMessage.SUCCESS,
+        null,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpMessage.SERVER_ERROR,
       );
-    } catch (error) {
-      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
     }
   }
 
@@ -88,7 +80,7 @@ export class PostController {
   async getRelatedPosts(
     @Query('categorySlug') categorySlug: string,
     @Query('excludeId') excludeId: string,
-    @Query('limit') limit: string
+    @Query('limit') limit: string,
   ) {
     try {
       const posts = await this.postService.findRelated({
@@ -98,18 +90,29 @@ export class PostController {
       });
 
       return new ResponseData(posts, HttpStatus.OK, HttpMessage.SUCCESS);
-
-    } catch (error) {
-      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+    } catch {
+      return new ResponseData(
+        null,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpMessage.SERVER_ERROR,
+      );
     }
   }
 
   @Get(':idOrSlug')
   async findOne(@Param('idOrSlug') idOrSlug: string) {
     try {
-      return new ResponseData(await this.postService.findOne(idOrSlug), HttpStatus.OK, HttpMessage.SUCCESS);
-    } catch (error) {
-      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+      return new ResponseData(
+        await this.postService.findOne(idOrSlug),
+        HttpStatus.OK,
+        HttpMessage.SUCCESS,
+      );
+    } catch {
+      return new ResponseData(
+        null,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpMessage.SERVER_ERROR,
+      );
     }
   }
 
@@ -131,9 +134,17 @@ export class PostController {
     }
 
     try {
-      return new ResponseData(await this.postService.update(id, dto, file, userId), HttpStatus.OK, HttpMessage.SUCCESS);
-    } catch (error) {
-      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+      return new ResponseData(
+        await this.postService.update(id, dto, file, userId),
+        HttpStatus.OK,
+        HttpMessage.SUCCESS,
+      );
+    } catch {
+      return new ResponseData(
+        null,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpMessage.SERVER_ERROR,
+      );
     }
   }
 
@@ -142,27 +153,45 @@ export class PostController {
   async remove(@Param('id') id: string): Promise<void> {
     try {
       await this.postService.remove(id);
-    } catch (error) {
-      throw new HttpException(HttpMessage.SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch {
+      throw new HttpException(
+        HttpMessage.SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
-
 
   @Post(':id/publish')
   async publish(@Param('id') id: string) {
     try {
-      return new ResponseData(await this.postService.publish(id), HttpStatus.OK, HttpMessage.SUCCESS);
-    } catch (error) {
-      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+      return new ResponseData(
+        await this.postService.publish(id),
+        HttpStatus.OK,
+        HttpMessage.SUCCESS,
+      );
+    } catch {
+      return new ResponseData(
+        null,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpMessage.SERVER_ERROR,
+      );
     }
   }
 
   @Post(':id/draft')
   async draft(@Param('id') id: string) {
     try {
-      return new ResponseData(await this.postService.draft(id), HttpStatus.OK, HttpMessage.SUCCESS);
-    } catch (error) {
-      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+      return new ResponseData(
+        await this.postService.draft(id),
+        HttpStatus.OK,
+        HttpMessage.SUCCESS,
+      );
+    } catch {
+      return new ResponseData(
+        null,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpMessage.SERVER_ERROR,
+      );
     }
   }
 }

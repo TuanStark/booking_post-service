@@ -3,7 +3,10 @@ import { deleteImageToService, uploadImageToService } from './http.util';
 
 @Injectable()
 export class UploadService {
-  async uploadImage(file: Express.Multer.File): Promise<any> {
+  async uploadImage(file: Express.Multer.File): Promise<{
+    imageUrl: string | undefined;
+    imagePublicId: string | undefined;
+  }> {
     return uploadImageToService(file); // Delegate to utility function
   }
 

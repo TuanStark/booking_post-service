@@ -8,4 +8,4 @@ async function bootstrap() {
 
   console.log(`Post service is running on: ${port}`);
 }
-bootstrap();
+void bootstrap();

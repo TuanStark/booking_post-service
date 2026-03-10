@@ -7,7 +7,7 @@ import { FindAllDto } from 'src/common/global/find-all.dto';
 // src/post-category/post-category.service.ts
 @Injectable()
 export class PostCategoryService {
-  constructor(private prisma: PrismaClient) { }
+  constructor(private prisma: PrismaClient) {}
 
   async create(dto: CreatePostCategoryDto) {
     const slug = await generateUniqueSlug(dto.name, this.prisma);
@@ -15,7 +15,10 @@ export class PostCategoryService {
     try {
       return await this.prisma.category.create({ data: { ...dto, slug } });
     } catch (error) {
-      throw new Error(error.message);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Failed to create category');
     }
   }
 
@@ -70,15 +73,21 @@ export class PostCategoryService {
         },
       });
     } catch (error) {
-      throw new Error(error.message);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Failed to find category');
     }
   }
 
-  async update(id: string, dto: any) {
+  async update(id: string, dto: Partial<CreatePostCategoryDto>) {
     try {
       return await this.prisma.category.update({ where: { id }, data: dto });
     } catch (error) {
-      throw new Error(error.message);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Failed to update category');
     }
   }
 
@@ -86,7 +95,10 @@ export class PostCategoryService {
     try {
       return await this.prisma.category.delete({ where: { id } });
     } catch (error) {
-      throw new Error(error.message);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Failed to remove category');
     }
   }
 }

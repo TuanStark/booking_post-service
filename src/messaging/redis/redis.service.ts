@@ -11,8 +11,16 @@ export class RedisService {
   async get<T>(key: string): Promise<T | undefined> {
     try {
       return await this.cacheManager.get<T>(key);
-    } catch (error) {
-      this.logger.error(`Failed to get cache for key ${key}: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(
+          `Failed to get cache for key ${key}: ${error.message}`,
+        );
+      } else {
+        this.logger.error(
+          `Failed to get cache for key ${key}: ${String(error)}`,
+        );
+      }
       return undefined;
     }
   }
@@ -21,18 +29,32 @@ export class RedisService {
     try {
       await this.cacheManager.set(key, value, ttl);
       this.logger.debug(`Cache set for key ${key} with TTL ${ttl}s`);
-    } catch (error) {
-      this.logger.error(`Failed to set cache for key ${key}: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(
+          `Failed to set cache for key ${key}: ${error.message}`,
+        );
+      } else {
+        this.logger.error(
+          `Failed to set cache for key ${key}: ${String(error)}`,
+        );
+      }
     }
   }
 
   async del(key: string): Promise<void> {
     try {
       await this.cacheManager.del(key);
-    } catch (error) {
-      this.logger.error(
-        `Failed to delete cache for key ${key}: ${error.message}`,
-      );
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(
+          `Failed to delete cache for key ${key}: ${error.message}`,
+        );
+      } else {
+        this.logger.error(
+          `Failed to delete cache for key ${key}: ${String(error)}`,
+        );
+      }
     }
   }
 }

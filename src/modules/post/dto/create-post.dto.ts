@@ -1,11 +1,5 @@
 import { PostStatus } from '../enum/enum';
-import {
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsUUID,
-} from 'class-validator';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 
 export class CreatePostDto {
   @IsString()

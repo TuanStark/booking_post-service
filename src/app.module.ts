@@ -8,10 +8,16 @@ import { ExternalModule } from './common/external/external.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [PostCategoriesModule, PostModule, PrismaModule, ExternalModule, ConfigModule.forRoot({
-    isGlobal: true,
-  })],
+  imports: [
+    PostCategoriesModule,
+    PostModule,
+    PrismaModule,
+    ExternalModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
